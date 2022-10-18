@@ -58,73 +58,31 @@ public:
 7. O(log(n))，常见于二分
 8. O(1)，常见于可证明结论（游戏必胜 or 必输，计数问题可找到通项公式）
 
-### What if the array is sorted?
+### 辅助问题：如果数组有序？
 
-基于以下三点：
-1. 已知：优于 O(n^2) 的方法只有 O(nlogn) 和 O(n)
-2. O(n) 的方法是下限，因为必须至少要知道每个数是什么
-3. 对于可以交换顺序的数据，将数据组织一下，比如按一定顺序排序后往往有新发现
+波利亚在怎样解题中说，如果无法解决原问题，不妨考虑一个辅助问题。对于这个问题，
 
-因此我们尝试排序，花费 O(nlogn) 排序后，输入是个有序的数组，那么会有以下这些想法：
+基于经验我们有：对于可以交换顺序的数据，排序后往往有新发现
 
-1. Early break：在二重循环中先选定 num1，再枚举 num2，如果num1 + num2 > target 则可以 break，例：
-```cpp
-vector<int> twoSumSorted(const vector<int> &nums, int target) {
-    int n = nums.size();
-    for (int i = 0; i < n; i++) {
-        for (int j = i + 1; j < n; j++) {
-            int sum = nums[i] + nums[j];
-            if (sum > target) {
-                break;
-            }
-            if (sum == target) {
-                return {nums[i], nums[j]};
-            }
-        }
-    }
-    return {};
-}
-```
-但 early break 往往依赖于数据，可构造出：target = 10000, nums = [1, 9998, 3, 9996, 5, 9994..., 5000, 5000]. Worst case 仍然是 O(n^2)。
+检查手里的工具，可以想到：
+1. O(n) 的方法是下限，因为至少要知道每个数是什么
+2. 优于 O(n^2) 的方法有 O(nlogn) 和 O(n)，所以可选的工具有O（nlog）的 二分，排序，分治，树，O（n）的哈希，2-pointer，动态规划等方法。
 
-2. 二分法：在选定数1之后，问题转化为在一个有序的子数组里查找是否存在数2，使数1 + 数2 = target，简单变形，也就是查找 num2 = target - num1 是否存在
-```cpp
-vector<int> twoSumSorted(const vector<int> &nums, int target) {
-    int n = nums.size();
-    for (int i = 0; i < n; i++) {
-        auto j = lower_bound(nums.begin() + i, nums.end(), target - nums[i]);
-        if (j != nums.end() && *j == target - nums[i]) {
-            return {nums[i], target - nums[i]};
-        }
-    }
-    return {};
-}
-```
+因此我们尝试排序。如果输入数组有序，那么会有以下这些解法：
 
-3. 2-pointer
-```cpp
-vector<int> twoSumSorted(const vector<int> &nums, int target) {
-    int n = nums.size();
-    int l = 0;
-    int r = n - 1;
-    while (l < r) {
-        while (nums[l] + nums[r] > target) {
-            r--;
-        }
-        if (nums[l] + nums[r] == target) {
-            break;
-        }
-        l++;
-    }
-    return {nums[l], nums[r]};
-}
-```
+1. Early break：在二重循环中先选定 num1，再枚举 num2，如果num1 + num2 > target 则可以 break。
+Early break 有一定的优化作用，但效果赖于数据。可构造出：target = 10000, nums = [1, 9998, 3, 9996, 5, 9994..., 5000, 5000]. Worst case 仍然是 O(n^2)。
 
+2. 二分法：选定 num1 之后因为数组有序，比起循环一个一个尝试，可以通过二分查找最远能走到哪。问题转化为在有序的子数组里查找 num2 = target - num1
+
+3. 2-pointers，留到 2-pointers 专门的问题细说。
+
+所以，排序后二分或者2-pointer 是可行的。
 
 ### Any better solution than O(nlogn)?
-在上面的方案中，我们学到了：将原问题：寻找 pair (num1, num2) 使 num1 + num2 = ans 转化为：给定 num1，查找 ans - num1 是否存在。Hash Table 可以在 O(1) 的时间加入，删除，查询某个元素是否存在。所以用 HashTable 可以解决这个问题。
+上面的辅助问题中启示了我们：将原问题转化为：给定 num1，查找 target - num1 是否存在。Hash Table 可以在 O(1) 的时间加入，删除，查询某个元素是否存在。所以用 HashTable 可以解决这个问题。
 
-## 代码实现
+## 细节实现
 
 ### 处理重复元素 6, [3, 3] 
 
