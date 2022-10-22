@@ -84,45 +84,83 @@ Early break 有一定的优化作用，但效果赖于数据。可构造出：ta
 
 3. 2-pointers，留到 2-pointers 专门的问题细说。
 
-所以，排序后二分或 2-pointer 是可行的。辅助问题的解法如下：
+所以，排序后二分或 2-pointer 是可行的。
+
+### Any better solution than O(nlogn)?
+上面的辅助问题中启示了我们：原问题可以转化为：给定 num1，查找 target - num1 是否存在。Hash Table 可以在 O(1) 的时间加入，删除，查询某个元素是否存在。所以用 HashTable 可以解决原问问题。
+
+## 细节实现
+
+### 处理重复元素 6, [3, 3] => {0, 1}
+
+按题意：`you may not use the same element twice.`，因此有两个处理方法：
+
+方法1：动态维护 last_seen 保存 a[0...i - 1] 的坐标。对某个元素 nums[i], 在 last_seen 中查找，这样 last_seen 中包含的坐标都小于 i。然后将 (nums[i], i) 加入 last_seen 中，代码如开头题解。
+
+方法2：对每个值只保存某次出现的下标。然后对每个 nums[i]，查找是否存在 nums[j] = target - num[i]，如果存在，且 i != j 则可以返回。
 
 ```cpp
 class Solution {
-private:
-    vector<int> twoSumSorted(const vector<int> &nums, int target) {
+
+public:
+    vector<int> twoSum(vector<int>& nums, int target) {
+        unordered_map<int, int> index;
         int n = nums.size();
         for (int i = 0; i < n; i++) {
-            auto j = lower_bound(nums.begin() + i, nums.end(), target - nums[i]);
-            if (j != nums.end() && *j == target - nums[i]) {
-                return {nums[i], *j};
+            index[nums[i]] = i;
+        }
+        
+        for (int i = 0; i < n; i++) {
+            auto it = index.find(target - nums[i]);
+            if (it != index.end() && it->second != i) {
+                return {i, it->second};
             }
         }
         return {};
     }
-public:
-    vector<int> twoSum(vector<int>& nums, int target) {
-        int n = nums.size();
-        vector<int> nums_copy = nums;
-        sort(nums_copy.begin(), nums_copy.end());
-        vector<int> ans_value = twoSumSorted(nums_copy, target);
+};
+```
 
-        vector<int> ans;
-        for (int i = 0; i < n; i++) {
-            if (nums[i] == ans_value[0] || nums[i] == ans_value[1]) {
-                ans.push_back(i);
-            }
-        }
-        
-        return ans;
+### Defensive Copy
+
+至少 LeetCode 的所有 C++ 题目都有这个问题，方法接口传的是引用，这样导致对 nums 的所有修改都会传回 caller。假设我是某个算法库的用户，我传了个参数进去，结果返回值虽然正确，但是参数也被改成了不知什么样，作为用户我会是崩溃的。所以最为安全的写法是对输入创造一个 "Defensive Copy"，如下：
+
+```cpp
+class Solution {
+public:
+    vector<int> twoSum(const vector<int>& nums, int target) {
+        vector<int> nums_copy = nums;
+        // ...
     }
 };
 ```
 
-### Any better solution than O(nlogn)?
-上面的辅助问题中启示了我们：原问题可以转化为：给定 num1，查找 target - num1 是否存在。Hash Table 可以在 O(1) 的时间加入，删除，查询某个元素是否存在。所以用 HashTable 可以解决这个问题。
+### C++ unordered_map 的陷阱
 
-## 细节实现
+unordered_map 对于精心构造的数据会产生哈希冲突, C++ 的实现和 Java 不同，是用链表实现的开散列。所以对精心构造的数据，C++ unordered_map 插入删除查找都会变成 O(n)，在竞赛中要注意。
 
-### 处理重复元素 6, [3, 3] 
+### int or size_t？
 
-TBD
+一些编译器会在 `for (int i = 0; i < nums.size(); i++) {` 处报 warning，因为 i 是有符号整数，nums.size() 返回类型是 size_t，是无符号整数。在比较的时候存在出问题的理论可能，但实战中数组下标很难取到 int32 的上限，正常来说还好。
+
+### 保存 find 的结果，避免多次查找
+
+这一部分：
+```
+auto it = last_seen.find(target - num);
+if (it != last_seen.end()) {
+    return {it->second, i};
+}
+```
+
+看上去繁琐，但这是 C++ 最效率的写法。it 是 C++ 的迭代器，可以理解成一个指向 (k, v) 的指针，last_seen.find 返回迭代器 it，或者 last_seen.end() 表示没找到。接下来的操作都可以通过 it，而不需要再次到 map 中查找。
+
+### return 的语法糖
+
+自从某个版本开始，C++ return vector 的时候也可以写 `return {it->second, i};` 了，好耶！
+
+## 其他语言实现
+TODO
+
+## 参考：怎样解题表
+TODO
