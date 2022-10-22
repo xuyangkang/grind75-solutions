@@ -69,25 +69,30 @@ public:
 
 已知：现在的解法为 O(n^2)，O(n) 的方法是下限，因为至少要知道每个数是什么，所以可选的武器在 O(nlogn) 和 O(n) 的范围
 
-
+![](./2-sum-1.jpg)
 
 ### 辅助问题：如果数组有序？
 
-波利亚在怎样解题中说，如果对原问题没有想法，可以考虑寻找一个辅助问题。根据经验，对于可以交换顺序的输入，排序后往往有新发现。比如很多操作：找最大最小第K大，查询等在有序数组内可以高效执行。贪心算法需要先排序。因此我们尝试排序。
+波利亚在怎样解题中说，如果对原问题没有想法，可以考虑寻找一个辅助问题。根据经验，对于可以交换顺序的输入，排序后往往有新发现。比如很多操作：求最大最小第K大，查询等在有序数组内可以高效执行。贪心算法需要先排序。因此我们尝试排序。
 
 如果输入数组有序，那么会有以下这些方法：
 
 1. Early break：在二重循环中先选定 num1，再枚举 num2，如果num1 + num2 > target 则可以 break。
 Early break 有一定的优化作用，但效果赖于数据。可构造出：target = 10000, nums = [1, 9998, 3, 9996, 5, 9994..., 5000, 5000]. Worst case 仍然是 O(n^2)。
 
-2. 二分法：选定 num1 之后因为整个数组有序，可以通过二分代替循环来得出最远能走到哪。问题转化为在有序的子数组里查找 num2 = target - num1 是否存在
+2. 二分法：选定 num1 之后因为整个数组有序，可以通过二分代替循环来得出最远能走到哪。问题转化为选定 num1，在有序的子数组里查找 target - num1。每次二分复杂度为 O(logn)，执行 n 次，总复杂度为O(nlogn)
 
 3. 2-pointers，留到 2-pointers 专门的问题细说。
 
-所以，排序后二分或 2-pointer 是可行的。
+所以花费 O(nlogn) 排序后二分（O(nlogn)）或 2-pointers（O(n)）是可行的。我们找到了一个总复杂度为 O(nlogn) 的解法。
 
-### Any better solution than O(nlogn)?
-上面的辅助问题中启示了我们：原问题可以转化为：给定 num1，查找 target - num1 是否存在。Hash Table 可以在 O(1) 的时间加入，删除，查询某个元素是否存在。所以用 HashTable 可以解决原问问题。
+![](./2-sum-2.jpg)
+
+### 重新定义问题
+
+我们从辅助问题中获得了启示，原问题可以转化为：对所有的 nums[i]，查找 target - nums[i] 是否存在。因此很容易想到哈希表。哈希表可以在 O(1) 的时间加入，删除，查询某个元素是否存在。因此问题解法的大方向就确定了。
+
+![](./2-sum-3.jpg)
 
 ## 细节实现
 
@@ -123,7 +128,7 @@ public:
 
 ### Defensive Copy
 
-至少 LeetCode 的所有 C++ 题目都有这个问题，方法接口传的是引用，这样导致对 nums 的所有修改都会传回 caller。假设我是某个算法库的用户，我传了个参数进去，结果返回值虽然正确，但是参数也被改成了不知什么样，作为用户我会是崩溃的。所以最为安全的写法是对输入创造一个 "Defensive Copy"，如下：
+LeetCode 的所有 C++ 题目都有这个隐藏的问题。题目模板的方法传的是引用，这样对 nums 的所有修改都会传回 caller。假设我是某个算法库的用户，我传了个参数进去，结果虽然正确，但参数会被改成了不知什么样。作为用户我是崩溃的。所以最为安全的写法是对输入创造一个 "Defensive Copy"，如下：
 
 ```cpp
 class Solution {
@@ -137,16 +142,16 @@ public:
 
 ### C++ unordered_map 的陷阱
 
-unordered_map 对于精心构造的数据会产生哈希冲突, C++ 的实现和 Java 不同，是用链表实现的开散列。所以对精心构造的数据，C++ unordered_map 插入删除查找都会变成 O(n)，在竞赛中要注意。
+任何哈希表都会面对哈希冲突, C++ 的实现和 Java 不同，是用链表实现的开散列。所以对精心构造的数据，C++ unordered_map 插入删除查找都会退化成链表，变成 O(n)
 
 ### int or size_t？
 
-一些编译器会在 `for (int i = 0; i < nums.size(); i++) {` 处报 warning，因为 i 是有符号整数，nums.size() 返回类型是 size_t，是无符号整数。在比较的时候存在出问题的理论可能，但实战中数组下标很难取到 int32 的上限，正常来说还好。
+一些编译器会在 `for (int i = 0; i < nums.size(); i++) {` 处报 warning，因为 i 是有符号整数，nums.size() 返回类型是 size_t，是无符号整数。在比较的时候存在出 bug 的理论可能，但实战中取值很难取到 int 的上限，一般不会出现问题。
 
 ### 保存 find 的结果，避免多次查找
 
 这一部分：
-```
+```cpp
 auto it = last_seen.find(target - num);
 if (it != last_seen.end()) {
     return {it->second, i};
@@ -154,6 +159,28 @@ if (it != last_seen.end()) {
 ```
 
 看上去繁琐，但这是 C++ 最效率的写法。it 是 C++ 的迭代器，可以理解成一个指向 (k, v) 的指针，last_seen.find 返回迭代器 it，或者 last_seen.end() 表示没找到。接下来的操作都可以通过 it，而不需要再次到 map 中查找。
+
+除此之外的写法1：
+
+```cpp
+int maybe_index = last_seen[target - num];
+if (maybe_index != DEFAULT_VALUE) {
+    return {i, maybe_index};
+}
+```
+写法1利用了 C++ 的 map 和 unordered_map 的默认值。如果访问一个不存在的 int 类的 key，会返回 0 或自定义的 DEFAULT_VALUE。这么写的缺点有两个：
+
+1. 对于这个问题，0 是个合法的数组下标，所以 0 不是一个安全的 default value，需要自定义 DEFAULT_VALUE，这语法很繁琐，不查我是想不起来的
+2. 如果访问一个不存在的 int 类的 key，实际是在 map 中创建了 (key, 0) 这个对。在实战中这种行为很容易产生内存泄露。
+
+写法2：
+
+```cpp
+if (last_seen.count(target - num)) {
+    return {i, last_seen[target - num]};
+}
+```
+需要执行两次查找，效率较低
 
 ### return 的语法糖
 
@@ -163,4 +190,4 @@ if (it != last_seen.end()) {
 TODO
 
 ## 参考：怎样解题表
-TODO
+![](how-to-solve-it.jpg)
