@@ -113,7 +113,7 @@ ListNode *tail = &head;
 ListNode *head = nullptr, *tail = nullptr;
 ```
 那么在插入节点的时候每次都要判断：
-```
+```cpp
 ListNode *n = new ListNode(list1->val);
 if (head == nullptr) {
    head = tail = n;
