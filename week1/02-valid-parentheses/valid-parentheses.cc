@@ -1,11 +1,13 @@
 class Solution {
+private:
+    bool is_pair(char last_ch, char ch) {
+        return (last_ch == '(' && ch == ')') 
+            || (last_ch == '[' && ch == ']')
+            || (last_ch == '{' && ch == '}');
+    }
 public:
     bool isValid(string s) {
         stack<char> stk;
-        char pair_of[128] = {};
-        pair_of[')'] = '(';
-        pair_of[']'] = '[';
-        pair_of['}'] = '{';
         for (char ch : s) {
             switch (ch) {
                 case '(':
@@ -16,15 +18,13 @@ public:
                 case ')':
                 case ']':
                 case '}':
-                    char pair_ch = pair_of[ch];
-
                     if (stk.empty()) {
                         return false;
                     }
-                    char top = stk.top();
+                    char last_ch = stk.top();
                     stk.pop();
 
-                    if (top != pair_ch) {
+                    if (!is_pair(last_ch, ch)) {
                         return false;
                     }                    
             }            
