@@ -54,4 +54,22 @@ bool is_pair(char last_ch, char ch) {
 }
 ```
 ### Switch 快于多个 if
-在 C++ 中，switch 进行一次判断就可以跳转到正确的分支，效率是强于多个 if 的。
+使用多个 if 的写法也是正确的：
+```cpp
+for (char ch : s) {
+    if (ch == '(' || ch == '[' || ch == '{') {
+        stk.push(ch);
+    } else {
+        if (stk.empty()) {
+            return false;
+        }
+        char last_ch = stk.top();
+        stk.pop();
+
+        if (!is_pair(last_ch, ch)) {
+            return false;
+        }     
+    }          
+}
+```
+但在 C++ 中，switch 进行一次判断就可以跳转到正确的分支，效率更高。
