@@ -4,7 +4,7 @@ public:
         unordered_map<int, int> last_seen;
         for (int i = 0; i < nums.size(); i++) {
             int num = nums[i];
-            auto it = last_seen.find(target - num);
+            const auto &it = last_seen.find(target - num);
             if (it != last_seen.end()) {
                 return {it->second, i};
             }
