@@ -1,6 +1,6 @@
 class Solution {
 private:
-    string cleanse(string s) {
+    string cleanse(const string &s) {
         string new_s;
         for (char ch : s) {
             if (isalnum(ch)) {
