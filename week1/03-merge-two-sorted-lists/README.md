@@ -56,12 +56,12 @@ void merge(int arr1[], int size1, int arr2[], int size2, int arr_out[]) {
   }
 }
 ```
-这个题也是同样的方法，只是数组变成了链表。熟悉这个合并函数和链表操作就可以容易的写出来。
+这个题也是同样的方法，只是输入从数组变成了链表。结合上面的 merge 函数和链表的从尾部插入操作就可以得到解。
 
 
 ## 实现技巧
 ### 是否允许破坏输入
-再次强调，按照本题的实现方法，虽然结果是对的，但是一个 side effort 就是输入的 list1 和 list2 被修改了。如果作为这个类库的用户，
+按照本题的实现方法，虽然结果是对的，但是一个 side effort 就是输入的 list1 和 list2 被修改了。如果作为这个类库的用户，
 调用 mergeTwoLists(list1, list2) 之后发现 list1 和 list2 变了，这个结果可能并不是想要的。要避免这个问题，应当每次复制一个节点再接在 head 后面。
 ```cpp
 class Solution {
