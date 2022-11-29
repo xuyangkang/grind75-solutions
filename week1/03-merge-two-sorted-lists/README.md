@@ -1,29 +1,45 @@
 # [Merge Two Sorted Lists](https://leetcode.com/problems/merge-two-sorted-lists/)
 ## Solution in C++
 ```cpp
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode() : val(0), next(nullptr) {}
+ *     ListNode(int x) : val(x), next(nullptr) {}
+ *     ListNode(int x, ListNode *next) : val(x), next(next) {}
+ * };
+ */
 class Solution {
+private:
+    void insert_tail(ListNode *&tail, int val) {
+        ListNode *n = new ListNode(val);
+        tail->next = n;
+        tail = tail->next;
+    }
 public:
     ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
         ListNode head;
         ListNode *tail = &head;
         while (list1 != nullptr && list2 != nullptr) {
             if (list1->val < list2->val) {
-                tail->next = list1;
-                tail = tail->next;
+                insert_tail(tail, list1->val);
                 list1 = list1->next;
             } else {
-                tail->next = list2;
-                tail = tail->next;
+                insert_tail(tail, list2->val);
                 list2 = list2->next;
             }
         }
         
-        if (list1 != nullptr) {
-            tail->next = list1;
+        while (list1 != nullptr) {
+            insert_tail(tail, list1->val);
+            list1 = list1->next;
         }
         
-        if (list2 != nullptr) {
-            tail->next = list2;
+        while (list2 != nullptr) {
+            insert_tail(tail, list2->val);
+            list2 = list2->next;
         }
         
         return head.next;
@@ -60,47 +76,19 @@ void merge(int arr1[], int size1, int arr2[], int size2, int arr_out[]) {
 
 
 ## 实现技巧
-### 是否允许破坏输入
-按照本题的实现方法，虽然结果是对的，但是一个 side effort 就是输入的 list1 和 list2 被修改了。如果作为这个类库的用户，
-调用 mergeTwoLists(list1, list2) 之后发现 list1 和 list2 变了，这个结果可能并不是想要的。要避免这个问题，应当每次复制一个节点再接在 head 后面。
+### Be defensive
+这个题目直接用 list1，list2 中的 node 也能过，但是这是个坏的习惯。和前面说的一样，如果这个算法库的用户调用 mergeTwoLists(list1, list2) 之后 list1 和 list2 变了，这或许并不是想要的。
+
+### 提炼 helper function
 ```cpp
-class Solution {
-public:
-    ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
-        ListNode head;
-        ListNode *tail = &head;
-        while (list1 != nullptr && list2 != nullptr) {
-            if (list1->val < list2->val) {
-                ListNode *n = new ListNode(list1->val);
-                tail->next = n;
-                tail = tail->next;
-                list1 = list1->next;
-            } else {
-                ListNode *n = new ListNode(list2->val);
-                tail->next = n;
-                tail = tail->next;
-                list2 = list2->next;
-            }
-        }
-        
-        while (list1 != nullptr) {
-            ListNode *n = new ListNode(list1->val);
-            tail->next = n;
-            tail = tail->next;
-            list1 = list1->next;
-        }
-        
-        while (list2 != nullptr) {
-            ListNode *n = new ListNode(list2->val);
-            tail->next = n;
-            tail = tail->next;
-            list2 = list2->next;
-        }
-        
-        return head.next;
-    }
-};
+void insert_tail(ListNode *&tail, int val) {
+    ListNode *n = new ListNode(val);
+    tail->next = n;
+    tail = tail->next;
+}
 ```
+较早的一个版本，这段代码重复了4次。在实践中避免重复，定义一个 helper function 会提高代码的整洁度
+
 ### 链表头的空节点
 题解中使用了这个编码的技巧：先建立一个空的 head 节点，然后将后面来的节点都接在他的后面。
 ```cpp
@@ -125,3 +113,5 @@ if (head == nullptr) {
 }
 ```
 代码会变得更复杂。
+
+同理，一些二叉树在实现的时候，比起系统自带的 null，定义一个 null 节点或许更安全。
