@@ -5,11 +5,12 @@
 ```python
 class Solution:
     def twoSum(self, nums: List[int], target: int) -> List[int]:
-        last_seen = {v:k for k, v in enumerate(nums)}
+        last_seen = {}
         for i, num in enumerate(nums):
             maybe_j = last_seen.get(target - num)
-            if maybe_j and maybe_j != i:
+            if maybe_j is not None:
                 return [i, maybe_j]
+            last_seen[num] = i
 ```
 
 ## 解题思路
@@ -96,87 +97,15 @@ Early break 有一定的优化作用，但效果赖于数据。可构造出：ta
 
 方法2：对每个值只保存某次出现的下标。然后对每个 nums[i]，查找是否存在 nums[j] = target - num[i]，如果存在，且 i != j 则可以返回。
 
-```cpp
-class Solution {
-
-public:
-    vector<int> twoSum(vector<int>& nums, int target) {
-        unordered_map<int, int> index;
-        int n = nums.size();
-        for (int i = 0; i < n; i++) {
-            index[nums[i]] = i;
-        }
-        
-        for (int i = 0; i < n; i++) {
-            auto it = index.find(target - nums[i]);
-            if (it != index.end() && it->second != i) {
-                return {i, it->second};
-            }
-        }
-        return {};
-    }
-};
+```python
+class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        last_seen = {v:k for k, v in enumerate(nums)}
+        for i, num in enumerate(nums):
+            maybe_j = last_seen.get(target - num)
+            if maybe_j and maybe_j != i:
+                return [i, maybe_j]
 ```
-
-### Defensive Copy
-
-LeetCode 的所有 C++ 题目都有这个隐藏的问题。题目模板的方法传的是引用，这样对 nums 的所有修改都会传回 caller。假设我是某个算法库的用户，我传了个参数进去，结果虽然正确，但参数会被改成了不知什么样。作为用户我是崩溃的。所以最为安全的写法是对输入创造一个 "Defensive Copy"，如下：
-
-```cpp
-class Solution {
-public:
-    vector<int> twoSum(const vector<int>& nums, int target) {
-        vector<int> nums_copy = nums;
-        // ...
-    }
-};
-```
-
-### C++ unordered_map 的陷阱
-
-任何哈希表都会面对哈希冲突, C++ 的实现和 Java 不同，是用链表实现的开散列。所以对精心构造的数据，C++ unordered_map 插入删除查找都会退化成链表，变成 O(n)
-
-### int or size_t？
-
-一些编译器会在 `for (int i = 0; i < nums.size(); i++) {` 处报 warning，因为 i 是有符号整数，nums.size() 返回类型是 size_t，是无符号整数。在比较的时候存在出 bug 的理论可能，但实战中取值很难取到 int 的上限，一般不会出现问题。
-
-### 保存 find 的结果，避免多次查找
-
-这一部分：
-```cpp
-auto it = last_seen.find(target - num);
-if (it != last_seen.end()) {
-    return {it->second, i};
-}
-```
-
-看上去繁琐，但这是 C++ 最效率的写法。it 是 C++ 的迭代器，可以理解成一个指向 (k, v) 的指针，last_seen.find 返回迭代器 it，或者 last_seen.end() 表示没找到。接下来的操作都可以通过 it，而不需要再次到 map 中查找。
-
-除此之外的写法1：
-
-```cpp
-int maybe_index = last_seen[target - num];
-if (maybe_index != DEFAULT_VALUE) {
-    return {i, maybe_index};
-}
-```
-写法1利用了 C++ 的 map 和 unordered_map 的默认值。如果访问一个不存在的 int 类的 key，会返回 0 或自定义的 DEFAULT_VALUE。这么写的缺点有两个：
-
-1. 对于这个问题，0 是个合法的数组下标，所以 0 不是一个安全的 default value，需要自定义 DEFAULT_VALUE，这语法很繁琐，不查我是想不起来的
-2. 如果访问一个不存在的 int 类的 key，实际是在 map 中创建了 (key, 0) 这个对。在实战中这种行为很容易产生内存泄露。
-
-写法2：
-
-```cpp
-if (last_seen.count(target - num)) {
-    return {i, last_seen[target - num]};
-}
-```
-需要执行两次查找，效率较低
-
-### return 的语法糖
-
-自从某个版本开始，C++ return vector 的时候也可以写 `return {it->second, i};` 了，好耶！
 
 ## 其他语言实现
 ### C++
