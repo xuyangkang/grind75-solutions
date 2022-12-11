@@ -1,23 +1,15 @@
 # [Two Sum](https://leetcode.com/problems/two-sum/)
 
-## Solution in C++
+## Solution in Python
 
-```cpp
-class Solution {
-public:
-    vector<int> twoSum(vector<int>& nums, int target) {
-        unordered_map<int, int> last_seen;
-        for (int i = 0; i < nums.size(); i++) {
-            int num = nums[i];
-            const auto &it = last_seen.find(target - num);
-            if (it != last_seen.end()) {
-                return {it->second, i};
-            }
-            last_seen[num] = i;
-        }
-        return {};
-    }
-};
+```python
+class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        last_seen = {v:k for k, v in enumerate(nums)}
+        for i, num in enumerate(nums):
+            maybe_j = last_seen.get(target - num)
+            if maybe_j and maybe_j != i:
+                return [i, maybe_j]
 ```
 
 ## 解题思路
@@ -187,7 +179,24 @@ if (last_seen.count(target - num)) {
 自从某个版本开始，C++ return vector 的时候也可以写 `return {it->second, i};` 了，好耶！
 
 ## 其他语言实现
-TODO
+### C++
+```cpp
+class Solution {
+public:
+    vector<int> twoSum(vector<int>& nums, int target) {
+        unordered_map<int, int> last_seen;
+        for (int i = 0; i < nums.size(); i++) {
+            int num = nums[i];
+            const auto &it = last_seen.find(target - num);
+            if (it != last_seen.end()) {
+                return {it->second, i};
+            }
+            last_seen[num] = i;
+        }
+        return {};
+    }
+};
+```
 
 ## 参考：怎样解题表
 ![](how-to-solve-it.jpg)
