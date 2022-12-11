@@ -19,24 +19,15 @@ class Solution:
 
 显然有 O(n^2) 的两层循环枚举解法:
 
-```cpp
-class Solution {
-public:
-    vector<int> twoSum(vector<int>& nums, int target) {
-        int n = nums.size();
-        for (int i = 0; i < n; i++) {
-            for (int j = i + 1; j < n; j++) {
-                if (nums[i] + nums[j] == target) {
-                    return {i, j};
-                }
-            }
-        }
-
-        return {};
-    }
-};
+```python
+class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        for i, num1 in enumerate(nums):
+            for j, num2 in enumerate(nums):
+                if i != j and num1 + num2 == target:
+                    return [i, j]
 ```
-但是这个有手就行的解显然是不够的。
+但是这个暴力解法是不能AC的
 
 ### 了解你的武器
 
@@ -106,6 +97,23 @@ class Solution:
             if maybe_j and maybe_j != i:
                 return [i, maybe_j]
 ```
+
+### enumerate
+
+```python
+for i, num in enumerate(nums):
+    # do something...
+```
+
+相当于：
+
+```python
+for i in range(len(nums)):
+    num = nums[i];
+    // do something...
+```
+
+用 enumerate 写出来更简单好看
 
 ## 其他语言实现
 ### C++
